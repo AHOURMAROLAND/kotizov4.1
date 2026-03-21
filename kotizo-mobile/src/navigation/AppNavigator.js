@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -7,6 +8,7 @@ import useThemeStore from '../store/themeStore';
 
 import SplashScreen from '../screens/onboarding/SplashScreen';
 import TutorialScreen from '../screens/onboarding/TutorialScreen';
+import CGUScreen from '../screens/onboarding/CGUScreen';
 import ConnexionScreen from '../screens/auth/ConnexionScreen';
 import InscriptionScreen from '../screens/auth/InscriptionScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
@@ -37,6 +39,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Tutorial" component={TutorialScreen} />
+            <Stack.Screen name="CGU" component={CGUScreen} />
             <Stack.Screen name="Connexion" component={ConnexionScreen} />
             <Stack.Screen name="Inscription" component={InscriptionScreen} />
             <Stack.Screen name="Verification" component={VerificationScreen} />
