@@ -14,4 +14,5 @@ urlpatterns = [
     path('moi/', views.MoiView.as_view()),
     path('moi/stats/', views.StatsProfilView.as_view()),
     path('fcm-token/', views.FCMTokenView.as_view()),
+    path('whatsapp/webhook/', views.WhatsAppWebhookView.as_view()),
 ]

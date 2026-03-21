@@ -338,3 +338,36 @@ class StatsProfilView(APIView):
             cache.set(cache_key, data, 3600)
 
         return Response(data)
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class WhatsAppWebhookView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        verify_token = request.query_params.get('hub.verify_token', '')
+        challenge = request.query_params.get('hub.challenge', '')
+        if verify_token == 'kotizo-webhook-verify-2026':
+            from django.http import HttpResponse
+            return HttpResponse(challenge)
+        return Response(status=403)
+
+    def post(self, request):
+        try:
+            data = request.data
+            numero = data.get('from', '') or data.get('numero', '')
+            message = data.get('message', '') or data.get('text', '')
+
+            if not numero or not message:
+                return Response(status=400)
+
+            from .whatsapp_handler import traiter_message_entrant
+            traiter_message_entrant(numero, message)
+
+        except Exception as e:
+            logger.error(f'Erreur webhook WhatsApp : {str(e)}')
+
+        return Response({'status': 'ok'})
