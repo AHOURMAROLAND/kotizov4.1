@@ -4,6 +4,7 @@ import {
   TouchableOpacity, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import useThemeStore from '../../store/themeStore';
 import useAuthStore from '../../store/authStore';
 import KCard from '../../components/common/KCard';
@@ -17,15 +18,18 @@ export default function DashboardScreen({ navigation }) {
   const [stats, setStats] = useState(null);
   const [cotisations, setCotisations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [nonLues, setNonLues] = useState(0);
 
   const chargerDonnees = async () => {
     try {
-      const [statsRes, cotisRes] = await Promise.all([
+      const [statsRes, cotisRes, notifRes] = await Promise.all([
         api.get(ENDPOINTS.moiStats),
         api.get(ENDPOINTS.cotisations),
+        api.get(ENDPOINTS.nonLues),
       ]);
       setStats(statsRes.data);
       setCotisations(cotisRes.data.slice(0, 3));
+      setNonLues(notifRes.data.non_lues || 0);
     } catch (e) {}
   };
 
@@ -59,10 +63,25 @@ export default function DashboardScreen({ navigation }) {
               @{user?.pseudo}
             </Text>
           </View>
-          <KBadge
-            label={user?.niveau?.charAt(0).toUpperCase() + user?.niveau?.slice(1)}
-            variant={user?.niveau || 'basique'}
-          />
+          <View style={styles.headerRight}>
+            <KBadge
+              label={user?.niveau?.charAt(0).toUpperCase() + user?.niveau?.slice(1)}
+              variant={user?.niveau || 'basique'}
+            />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('NotificationsScreen')}
+              style={[styles.bellBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
+              {nonLues > 0 && (
+                <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                  <Text style={styles.badgeText}>
+                    {nonLues > 9 ? '9+' : nonLues}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <KCard style={styles.balanceCard}>
@@ -209,6 +228,32 @@ const styles = StyleSheet.create({
   },
   greeting: { fontSize: 13 },
   pseudo: { fontSize: 22, fontWeight: '700' },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  bellBtn: {
+    width: 40, height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4, right: -4,
+    width: 18, height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
   balanceCard: { marginHorizontal: 20, marginBottom: 16, padding: 0, overflow: 'hidden' },
   balanceInner: { padding: 24, borderRadius: 14 },
   balanceLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 6 },
