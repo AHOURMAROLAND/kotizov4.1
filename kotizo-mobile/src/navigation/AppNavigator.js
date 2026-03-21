@@ -12,6 +12,7 @@ import CGUScreen from '../screens/onboarding/CGUScreen';
 import ConnexionScreen from '../screens/auth/ConnexionScreen';
 import InscriptionScreen from '../screens/auth/InscriptionScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
+import MainNavigator from './MainNavigator';
 
 const Stack = createStackNavigator();
 
@@ -45,13 +46,9 @@ export default function AppNavigator() {
             <Stack.Screen name="Verification" component={VerificationScreen} />
           </>
         ) : (
-          <Stack.Screen name="Main" component={PlaceholderMain} />
+          <Stack.Screen name="Main" component={MainNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
-
-function PlaceholderMain() {
-  return <View style={{ flex: 1, backgroundColor: '#0A0F1E' }} />;
 }
