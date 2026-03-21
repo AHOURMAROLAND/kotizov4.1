@@ -21,6 +21,7 @@ import HistoriqueScreen from '../screens/app/HistoriqueScreen';
 import StatistiquesScreen from '../screens/app/StatistiquesScreen';
 import NotificationsScreen from '../screens/app/NotificationsScreen';
 import AgentIAScreen from '../screens/app/AgentIAScreen';
+import VerificationProfilScreen from '../screens/app/VerificationScreen';
 
 const Stack = createStackNavigator();
 
@@ -61,6 +62,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Statistiques" component={StatistiquesScreen} />
             <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} />
             <Stack.Screen name="AgentIA" component={AgentIAScreen} />
+            <Stack.Screen name="VerificationProfil" component={VerificationProfilScreen} />
           </>
         )}
       </Stack.Navigator>

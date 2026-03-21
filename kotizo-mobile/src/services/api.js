@@ -24,13 +24,23 @@ api.interceptors.response.use(
       original._retry = true;
       try {
         const refresh = await AsyncStorage.getItem('refresh_token');
-        const res = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, { refresh });
+        if (!refresh) {
+          await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'user']);
+          return Promise.reject(error);
+        }
+        const res = await axios.post(
+          `${API_BASE_URL}/auth/token/refresh/`,
+          { refresh },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
         const newAccess = res.data.access;
+        const newRefresh = res.data.refresh;
         await AsyncStorage.setItem('access_token', newAccess);
+        if (newRefresh) await AsyncStorage.setItem('refresh_token', newRefresh);
         original.headers.Authorization = `Bearer ${newAccess}`;
         return api(original);
       } catch {
-        await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
+        await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'user']);
       }
     }
     return Promise.reject(error);

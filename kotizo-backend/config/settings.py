@@ -111,7 +111,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:8081'
+    default='http://localhost:3000,http://localhost:8081,http://192.168.213.40:8081'
 ).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
@@ -328,3 +328,6 @@ LOGGING = {
         },
     },
 }
+# CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', ...).split(',')
+
+CORS_ALLOW_ALL_ORIGINS = True

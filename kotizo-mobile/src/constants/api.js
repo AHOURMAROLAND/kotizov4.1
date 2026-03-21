@@ -1,9 +1,9 @@
-export const API_BASE_URL = 'http://192.168.1.XXX:8000/api';
+export const API_BASE_URL = 'http://unpoeticised-stonefly-julieta.ngrok-free.dev/api';
 
 export const ENDPOINTS = {
   inscription: '/auth/inscription/',
   connexion: '/auth/connexion/',
-  deconnexion: '/auth/deconnexion/',
+  deconnexion: '/auth/deconnexion/',  
   tokenRefresh: '/auth/token/refresh/',
   moi: '/auth/moi/',
   moiStats: '/auth/moi/stats/',
