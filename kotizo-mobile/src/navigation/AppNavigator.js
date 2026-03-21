@@ -18,6 +18,9 @@ import DetailCotisationScreen from '../screens/app/DetailCotisationScreen';
 import RejoindreScreen from '../screens/app/RejoindreScreen';
 import CreerQuickPayScreen from '../screens/app/CreerQuickPayScreen';
 import HistoriqueScreen from '../screens/app/HistoriqueScreen';
+import StatistiquesScreen from '../screens/app/StatistiquesScreen';
+import NotificationsScreen from '../screens/app/NotificationsScreen';
+import AgentIAScreen from '../screens/app/AgentIAScreen';
 
 const Stack = createStackNavigator();
 
@@ -25,10 +28,7 @@ export default function AppNavigator() {
   const { isAuthenticated, isLoading, init } = useAuthStore();
   const { init: initTheme } = useThemeStore();
 
-  useEffect(() => {
-    init();
-    initTheme();
-  }, []);
+  useEffect(() => { init(); initTheme(); }, []);
 
   if (isLoading) {
     return (
@@ -58,6 +58,9 @@ export default function AppNavigator() {
             <Stack.Screen name="Rejoindre" component={RejoindreScreen} />
             <Stack.Screen name="CreerQuickPay" component={CreerQuickPayScreen} />
             <Stack.Screen name="Historique" component={HistoriqueScreen} />
+            <Stack.Screen name="Statistiques" component={StatistiquesScreen} />
+            <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} />
+            <Stack.Screen name="AgentIA" component={AgentIAScreen} />
           </>
         )}
       </Stack.Navigator>
