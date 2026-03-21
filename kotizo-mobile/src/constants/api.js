@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://unpoeticised-stonefly-julieta.ngrok-free.dev/api';
+export const API_BASE_URL = 'https://unpoeticised-stonefly-julieta.ngrok-free.dev/api';
 
 export const ENDPOINTS = {
   inscription: '/auth/inscription/',

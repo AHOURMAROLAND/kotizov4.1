@@ -24,7 +24,7 @@ export default function CreerCotisationScreen({ navigation }) {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
+  const [nbJours, setNbJours] = useState('7');
 
   const showToast = (message, type = 'error') => {
     setToast({ visible: true, message, type });
@@ -57,7 +57,7 @@ export default function CreerCotisationScreen({ navigation }) {
     setLoading(true);
     try {
       const dateExpiration = new Date();
-      dateExpiration.setDate(dateExpiration.getDate() + 7);
+      dateExpiration.setDate(dateExpiration.getDate() + parseInt(nbJours));
 
       const res = await api.post(ENDPOINTS.cotisations, {
         ...form,
@@ -131,6 +131,35 @@ export default function CreerCotisationScreen({ navigation }) {
             keyboardType="phone-pad"
             error={errors.numero_receveur}
           />
+
+          <View style={styles.joursContainer}>
+            <Text style={[styles.joursLabel, { color: colors.textSecondary }]}>
+              Duree de la cotisation
+            </Text>
+            <View style={styles.joursRow}>
+              {['3', '7', '14', '21', '30'].map((j) => (
+                <TouchableOpacity
+                  key={j}
+                  style={[
+                    styles.joursBtn,
+                    {
+                      backgroundColor: nbJours === j ? colors.primary : colors.cardSecondary,
+                      borderColor: nbJours === j ? colors.primary : colors.border,
+                    }
+                  ]}
+                  onPress={() => setNbJours(j)}
+                >
+                  <Text style={{
+                    color: nbJours === j ? '#FFF' : colors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: '600',
+                  }}>
+                    {j}j
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           {frais && (
             <KCard secondary style={styles.fraisCard}>
@@ -224,4 +253,12 @@ const styles = StyleSheet.create({
   },
   toggle: { width: 44, height: 26, borderRadius: 13, justifyContent: 'center' },
   toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
+  joursContainer: { marginBottom: 16 },
+  joursLabel: { fontSize: 13, fontWeight: '500', marginBottom: 8 },
+  joursRow: { flexDirection: 'row', gap: 8 },
+  joursBtn: {
+    flex: 1, paddingVertical: 10,
+    borderRadius: 10, borderWidth: 1,
+    alignItems: 'center',
+  },
 });

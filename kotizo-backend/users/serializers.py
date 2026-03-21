@@ -97,7 +97,7 @@ class UserSerializer(serializers.ModelSerializer):
             'nom_verifie', 'code_parrainage',
             'nb_parrainages_actifs', 'date_inscription',
             'cotisations_creees_aujourd_hui',
-            'cotisations_creees_fenetre',
+            'cotisations_creees_fenetre', 'is_staff',
         ]
         read_only_fields = [
             'id', 'niveau', 'email_verifie', 'whatsapp_verifie',
