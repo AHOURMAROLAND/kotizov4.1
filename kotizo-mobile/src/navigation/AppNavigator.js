@@ -13,6 +13,9 @@ import ConnexionScreen from '../screens/auth/ConnexionScreen';
 import InscriptionScreen from '../screens/auth/InscriptionScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
 import MainNavigator from './MainNavigator';
+import CreerCotisationScreen from '../screens/app/CreerCotisationScreen';
+import DetailCotisationScreen from '../screens/app/DetailCotisationScreen';
+import RejoindreScreen from '../screens/app/RejoindreScreen';
 
 const Stack = createStackNavigator();
 
@@ -46,7 +49,12 @@ export default function AppNavigator() {
             <Stack.Screen name="Verification" component={VerificationScreen} />
           </>
         ) : (
-          <Stack.Screen name="Main" component={MainNavigator} />
+          <>
+            <Stack.Screen name="Main" component={MainNavigator} />
+            <Stack.Screen name="CreerCotisation" component={CreerCotisationScreen} />
+            <Stack.Screen name="DetailCotisation" component={DetailCotisationScreen} />
+            <Stack.Screen name="Rejoindre" component={RejoindreScreen} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
