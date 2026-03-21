@@ -16,6 +16,8 @@ import MainNavigator from './MainNavigator';
 import CreerCotisationScreen from '../screens/app/CreerCotisationScreen';
 import DetailCotisationScreen from '../screens/app/DetailCotisationScreen';
 import RejoindreScreen from '../screens/app/RejoindreScreen';
+import CreerQuickPayScreen from '../screens/app/CreerQuickPayScreen';
+import HistoriqueScreen from '../screens/app/HistoriqueScreen';
 
 const Stack = createStackNavigator();
 
@@ -54,6 +56,8 @@ export default function AppNavigator() {
             <Stack.Screen name="CreerCotisation" component={CreerCotisationScreen} />
             <Stack.Screen name="DetailCotisation" component={DetailCotisationScreen} />
             <Stack.Screen name="Rejoindre" component={RejoindreScreen} />
+            <Stack.Screen name="CreerQuickPay" component={CreerQuickPayScreen} />
+            <Stack.Screen name="Historique" component={HistoriqueScreen} />
           </>
         )}
       </Stack.Navigator>
