@@ -8,6 +8,7 @@ import KButton from '../../components/common/KButton';
 import KInput from '../../components/common/KInput';
 import useAuthStore from '../../store/authStore';
 import useThemeStore from '../../store/themeStore';
+import KToast from '../../components/common/KToast';
 
 export default function ConnexionScreen({ navigation }) {
   const { colors } = useThemeStore();
@@ -15,20 +16,20 @@ export default function ConnexionScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState({ visible: false, message: '' });
 
   const handleConnexion = async () => {
     if (!email || !password) {
-      setError('Remplissez tous les champs');
+      setToast({ visible: true, message: 'Remplissez tous les champs' });
       return;
     }
-    setError('');
+    setToast({ ...toast, visible: false });
     setLoading(true);
     try {
       await connexion(email, password);
     } catch (e) {
       const msg = e.response?.data?.error || 'Erreur de connexion';
-      setError(msg);
+      setToast({ visible: true, message: msg });
     } finally {
       setLoading(false);
     }
@@ -36,6 +37,12 @@ export default function ConnexionScreen({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <KToast
+        message={toast.message}
+        type="error"
+        visible={toast.visible}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -64,12 +71,6 @@ export default function ConnexionScreen({ navigation }) {
               onChangeText={setPassword}
               secureTextEntry
             />
-
-            {error ? (
-              <View style={[styles.errorBox, { backgroundColor: 'rgba(239,68,68,0.1)' }]}>
-                <Text style={{ color: colors.error, fontSize: 13 }}>{error}</Text>
-              </View>
-            ) : null}
 
             <TouchableOpacity onPress={() => navigation.navigate('MotDePasseOublie')}>
               <Text style={[styles.forgotText, { color: colors.primary }]}>
@@ -123,11 +124,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '700', marginBottom: 8 },
   subtitle: { fontSize: 14, textAlign: 'center' },
   form: {},
-  errorBox: {
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-  },
   forgotText: { fontSize: 13, marginBottom: 16, textAlign: 'right' },
   separator: {
     flexDirection: 'row',

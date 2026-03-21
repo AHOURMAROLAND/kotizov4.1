@@ -11,19 +11,31 @@ def envoyer_notification_paiement(participation_id):
             'cotisation', 'cotisation__createur', 'participant'
         ).get(id=participation_id)
         cotisation = participation.cotisation
+        participant = participation.participant
+        createur = cotisation.createur
 
         creer_notification(
-            user=participation.participant,
+            user=participant,
             type_notification='paiement_recu',
             titre='Paiement confirme',
-            message=f'Votre paiement de {participation.montant} FCFA pour "{cotisation.nom}" est confirme.',
+            message=(
+                f'Votre paiement de {participation.montant:,} FCFA pour la cotisation '
+                f'"{cotisation.nom}" a bien ete enregistre. '
+                f'@{createur.pseudo} en a ete notifie.'
+            ),
             data={'cotisation_slug': cotisation.slug},
         )
+
         creer_notification(
-            user=cotisation.createur,
+            user=createur,
             type_notification='paiement_recu',
-            titre='Nouveau paiement recu',
-            message=f'{participation.participant.pseudo} a paye pour "{cotisation.nom}".',
+            titre=f'{participant.prenom} vient de payer',
+            message=(
+                f'@{participant.pseudo} a paye {participation.montant:,} FCFA '
+                f'pour votre cotisation "{cotisation.nom}". '
+                f'Progression : {cotisation.participants_payes}/{cotisation.nombre_participants} '
+                f'participants · {cotisation.get_progression()}% complete.'
+            ),
             data={'cotisation_slug': cotisation.slug},
         )
     except Exception as e:
@@ -35,12 +47,17 @@ def envoyer_notification_cotisation_complete(cotisation_id):
     from cotisations.models import Cotisation
     from .utils import creer_notification
     try:
-        cotisation = Cotisation.objects.get(id=cotisation_id)
+        cotisation = Cotisation.objects.select_related('createur').get(id=cotisation_id)
         creer_notification(
             user=cotisation.createur,
             type_notification='cotisation_complete',
-            titre='Cotisation complete !',
-            message=f'Tous les participants ont paye pour "{cotisation.nom}". Total : {cotisation.montant_collecte} FCFA.',
+            titre='Cotisation complete — Felicitations !',
+            message=(
+                f'Tous les {cotisation.nombre_participants} participants ont paye pour '
+                f'"{cotisation.nom}". '
+                f'Montant total collecte : {cotisation.montant_collecte:,} FCFA. '
+                f'Le reversement sur votre Mobile Money est en cours de traitement.'
+            ),
             data={'cotisation_slug': cotisation.slug},
         )
     except Exception as e:
@@ -53,19 +70,29 @@ def envoyer_notification_quickpay_paye(quickpay_id):
     from .utils import creer_notification
     try:
         quickpay = QuickPay.objects.select_related('createur', 'payeur').get(id=quickpay_id)
+
         creer_notification(
             user=quickpay.createur,
             type_notification='paiement_recu',
-            titre='Quick Pay paye !',
-            message=f'Votre Quick Pay de {quickpay.montant} FCFA a ete paye. Reversement en cours.',
+            titre='Quick Pay paye — Reversement en cours',
+            message=(
+                f'Votre Quick Pay de {quickpay.montant:,} FCFA (code : {quickpay.code}) '
+                f'{"a ete paye par " + quickpay.payeur.prenom if quickpay.payeur else "a ete paye"}. '
+                f'Le montant est en cours de reversement sur votre Mobile Money.'
+            ),
             data={'quickpay_code': quickpay.code},
         )
+
         if quickpay.payeur:
             creer_notification(
                 user=quickpay.payeur,
                 type_notification='paiement_recu',
-                titre='Paiement confirme',
-                message=f'Votre paiement de {quickpay.montant} FCFA via Quick Pay est confirme.',
+                titre='Paiement Quick Pay confirme',
+                message=(
+                    f'Votre paiement de {quickpay.montant:,} FCFA a ete confirme avec succes. '
+                    f'Code de reference : {quickpay.code}. '
+                    f'Merci d\'utiliser Kotizo !'
+                ),
                 data={'quickpay_code': quickpay.code},
             )
     except Exception as e:
@@ -93,7 +120,7 @@ def ping_evolution_api():
             envoyer_email(
                 settings.GMAIL_USER,
                 'Kotizo — Bot WhatsApp retabli',
-                'Le bot WhatsApp est de nouveau actif.'
+                'Le bot WhatsApp est de nouveau actif et operationnel.'
             )
         else:
             statut.nb_pings_echoues = 0
@@ -109,7 +136,13 @@ def ping_evolution_api():
             envoyer_email(
                 settings.GMAIL_USER,
                 'Kotizo — PANNE Bot WhatsApp',
-                'Le bot WhatsApp ne repond plus. Changez le numero dans le dashboard admin.'
+                (
+                    'ALERTE : Le bot WhatsApp ne repond plus depuis 15 minutes.\n\n'
+                    'Actions requises :\n'
+                    '1. Verifiez l\'etat du conteneur Evolution API\n'
+                    '2. Changez le numero si necessaire depuis le dashboard admin\n\n'
+                    'Dashboard : admin.kotizo.app'
+                )
             )
 
     statut.save()
@@ -120,8 +153,10 @@ def envoyer_rapport_journalier():
     from django.contrib.auth import get_user_model
     from django.utils import timezone
     from paiements.models import Transaction
+    from django.db import models as db_models
     from core.email_router import envoyer_email
     from core.whatsapp import envoyer_whatsapp
+
     User = get_user_model()
     aujourd_hui = timezone.now().date()
 
@@ -148,12 +183,17 @@ def envoyer_rapport_journalier():
                 float(t.montant) for t in transactions
                 if t.type_transaction == 'payout'
             )
+            nb_transactions = transactions.count()
 
             message = (
-                f'*Kotizo* — Resume du {aujourd_hui.strftime("%d/%m/%Y")}\n\n'
-                f'Paiements effectues : {total_payin} FCFA\n'
-                f'Reversements recus : {total_payout} FCFA\n\n'
-                f'Bonne soiree !'
+                f'*Kotizo — Resume du {aujourd_hui.strftime("%d/%m/%Y")}*\n\n'
+                f'Bonjour {user.prenom},\n\n'
+                f'Voici votre bilan du jour :\n'
+                f'• Transactions effectuees : {nb_transactions}\n'
+                f'• Montants payes : {total_payin:,.0f} FCFA\n'
+                f'• Reversements recus : {total_payout:,.0f} FCFA\n\n'
+                f'Merci de faire confiance a Kotizo !\n'
+                f'_Cotisez Ensemble, Simplement_'
             )
 
             if user.whatsapp_numero and user.whatsapp_verifie:
@@ -162,7 +202,7 @@ def envoyer_rapport_journalier():
                 envoyer_email(
                     user.email,
                     f'Votre resume Kotizo du {aujourd_hui.strftime("%d/%m/%Y")}',
-                    message.replace('*', '')
+                    message.replace('*', '').replace('_', '')
                 )
         except Exception as e:
             logger.error(f'Erreur rapport journalier user {user.id} : {str(e)}')

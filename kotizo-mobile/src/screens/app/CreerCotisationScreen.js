@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, KeyboardAvoidingView, Platform, Alert,
+  TouchableOpacity, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import KButton from '../../components/common/KButton';
 import KInput from '../../components/common/KInput';
 import KCard from '../../components/common/KCard';
+import KToast from '../../components/common/KToast';
 import useThemeStore from '../../store/themeStore';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../constants/api';
@@ -23,6 +24,11 @@ export default function CreerCotisationScreen({ navigation }) {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' });
+
+  const showToast = (message, type = 'error') => {
+    setToast({ visible: true, message, type });
+  };
 
   const update = (field) => (val) => setForm({ ...form, [field]: val });
 
@@ -31,8 +37,7 @@ export default function CreerCotisationScreen({ navigation }) {
     if (!montant) return null;
     const fraisKotizo = montant * 0.005;
     const totalParticipant = montant * 1.05;
-    const totalGeneral = totalParticipant * (parseInt(form.nombre_participants) || 1);
-    return { fraisKotizo, totalParticipant, totalGeneral };
+    return { fraisKotizo, totalParticipant };
   };
 
   const valider = () => {
@@ -67,13 +72,17 @@ export default function CreerCotisationScreen({ navigation }) {
       });
     } catch (e) {
       const data = e.response?.data;
-      if (typeof data === 'object') {
+      let message = 'Impossible de creer la cotisation';
+      if (e.response?.status === 401) {
+        message = 'Session expiree. Reconnectez-vous.';
+      } else if (e.response?.status === 429) {
+        message = data?.error || 'Limite de cotisations atteinte pour aujourd\'hui';
+      } else if (typeof data === 'object') {
         const firstKey = Object.keys(data)[0];
         const firstVal = data[firstKey];
-        Alert.alert('Erreur', Array.isArray(firstVal) ? firstVal[0] : String(firstVal));
-      } else {
-        Alert.alert('Erreur', 'Impossible de creer la cotisation');
+        message = Array.isArray(firstVal) ? firstVal[0] : String(firstVal);
       }
+      showToast(message, 'error');
     } finally {
       setLoading(false);
     }
@@ -83,6 +92,12 @@ export default function CreerCotisationScreen({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <KToast
+        message={toast.message}
+        type={toast.type}
+        visible={toast.visible}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
@@ -119,7 +134,9 @@ export default function CreerCotisationScreen({ navigation }) {
 
           {frais && (
             <KCard secondary style={styles.fraisCard}>
-              <Text style={[styles.fraisTitle, { color: colors.textSecondary }]}>Apercu des frais</Text>
+              <Text style={[styles.fraisTitle, { color: colors.textSecondary }]}>
+                APERCU DES FRAIS
+              </Text>
               <View style={styles.fraisRow}>
                 <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Montant unitaire</Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600' }}>
@@ -132,7 +149,7 @@ export default function CreerCotisationScreen({ navigation }) {
                   {frais.fraisKotizo.toFixed(0)} FCFA
                 </Text>
               </View>
-              <View style={[styles.fraisRow, styles.fraisTotal]}>
+              <View style={[styles.fraisRow, styles.fraisTotal, { borderTopColor: colors.border }]}>
                 <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '700' }}>
                   Total par participant
                 </Text>
@@ -155,14 +172,8 @@ export default function CreerCotisationScreen({ navigation }) {
                 Renouvellement mensuel automatique
               </Text>
             </View>
-            <View style={[
-              styles.toggle,
-              { backgroundColor: form.est_recurrente ? colors.primary : colors.border }
-            ]}>
-              <View style={[
-                styles.toggleThumb,
-                { transform: [{ translateX: form.est_recurrente ? 20 : 2 }] }
-              ]} />
+            <View style={[styles.toggle, { backgroundColor: form.est_recurrente ? colors.primary : colors.border }]}>
+              <View style={[styles.toggleThumb, { transform: [{ translateX: form.est_recurrente ? 20 : 2 }] }]} />
             </View>
           </TouchableOpacity>
 
@@ -190,9 +201,18 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: '700' },
   fraisCard: { marginBottom: 16 },
-  fraisTitle: { fontSize: 12, fontWeight: '600', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  fraisTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 10,
+    letterSpacing: 0.8,
+  },
   fraisRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  fraisTotal: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', marginTop: 6, paddingTop: 10 },
+  fraisTotal: {
+    borderTopWidth: 1,
+    marginTop: 6,
+    paddingTop: 10,
+  },
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -202,16 +222,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 8,
   },
-  toggle: {
-    width: 44,
-    height: 26,
-    borderRadius: 13,
-    justifyContent: 'center',
-  },
-  toggleThumb: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#FFFFFF',
-  },
+  toggle: { width: 44, height: 26, borderRadius: 13, justifyContent: 'center' },
+  toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
 });
